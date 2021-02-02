@@ -35,6 +35,8 @@ namespace GCodeToBppConverter
         string bppCodeFile = "";
         string[] gcodeLines;
         List<string> BppCode = new List<string>();
+        List<List<string>> BppPrg = new List<List<string>>();
+        int numberLines = 100000;
         public MainWindow()
         {
             InitializeComponent();
@@ -46,6 +48,22 @@ namespace GCodeToBppConverter
             {
                 gcodeFile = openFileDialog.FileName;
                 Title = gcodeFile;
+                string gCode = "";
+                try
+                {
+                    // Open the text file using a stream reader.
+                    using (var sr = new StreamReader(gcodeFile))
+                    {
+                        // Read the stream as a string, and write the string to the console.
+                        gCode = sr.ReadToEnd();
+                    }
+                }
+                catch (IOException e1)
+                {
+                    MessageBox.Show("The file could not be read:\n" + e1.Message);
+
+                }
+                GCode.Text = gCode;
                 PieceDialogCommand();
                 ToolButtonCommand();
                 ShiftButtonCommand();
@@ -98,7 +116,8 @@ namespace GCodeToBppConverter
             }
             using (StreamWriter outputFile = new StreamWriter(bppCodeFile))
             {
-                outputFile.WriteLine(BppText.Text);
+                TextBox currentTB =(TextBox) Vkladki.SelectedContent;
+                outputFile.WriteLine(currentTB.Text);
             }
         }
 
@@ -128,6 +147,7 @@ namespace GCodeToBppConverter
 
         private void RunButtonClick(object sender, RoutedEventArgs e)
         {
+            
             BppCode.Clear();
             BppCode.Add(GetBppHeader());
             BppCode.Add(GetBppVariables());
@@ -136,13 +156,20 @@ namespace GCodeToBppConverter
             GetRoutOp();
             GetBppCodeLines();
             GetEndFile();
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb1 = new StringBuilder();
 
-            foreach(var str in BppCode)
+            foreach (var str in BppCode)
             {
-                sb.Append(str);
+                sb1.Append(str);
             }
-            BppText.Text = sb.ToString();
+
+            TextBox tb1 = new TextBox();
+            tb1.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            tb1.Text = sb1.ToString();
+            Vkladki.Items.Add(new TabItem
+            {
+                Content = tb1
+            });
         }
 
         private void GetEndFile()
@@ -177,6 +204,13 @@ namespace GCodeToBppConverter
         {
             string code = String.Format(@"@ ROUT, """", """", 95893420, """", 0 : ""P1001"", 0, ""1"", 0, 0, """", 1, 1.6, -1, 0, 0, 32, 32, 50, 0, 45, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, ""{0}"", 100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 5, 0, 20, 80, 60, 0, """", """", ""ROUT"", 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 99, 0
   @ START_POINT, """", """", 95893036, """", 0 : 0, 0, 0", ToolName);
+            BppCode.Add(code + '\n');
+        }
+
+        private void GetRoutOp(double x, double y)
+        {
+            string code = String.Format(@"@ ROUT, """", """", 95893420, """", 0 : ""P1001"", 0, ""1"", 0, 0, """", 1, 1.6, -1, 0, 0, 32, 32, 50, 0, 45, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, ""{0}"", 100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 5, 0, 20, 80, 60, 0, """", """", ""ROUT"", 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 99, 0
+  @ START_POINT, """", """", 95893036, """", 0 : {1}, {2}, 0", ToolName, Convert.ToString(x), Convert.ToString(y));
             BppCode.Add(code + '\n');
         }
         private void GetBppCodeLines()
@@ -214,7 +248,9 @@ namespace GCodeToBppConverter
 
             int startLine = GetStartLine();
             int endLine = GetEndLine(startLine);
-            //endLine = 20000;
+            //int endLine = gcodeLines.Length-1;
+            int numLine = 0;
+            //MessageBox.Show("Start");
             for(int i = startLine; i < endLine; i++)
             {
                 double Xi = Xprev;
@@ -248,10 +284,38 @@ namespace GCodeToBppConverter
                 string strZ = Convert.ToString(dZ).Replace(',', '.');
                 string codeLine = String.Format(@"  @ LINE_EP, """", """", {0}, """", 0 : {1}, {2}, 0, {3}, 0, 0, 0, 0, 0", strId, strX, strY, strZ);
                 BppCode.Add(codeLine + '\n');
-                Zprev = Zi;
+                //MessageBox.Show(codeLine);
+               Zprev = Zi;
                 Xprev = Xi;
                 Yprev = Yi;
+                numLine += 1;
+                if (numLine > numberLines)
+                {
+                    numLine = 0;
+                    GetEndFile();
+                    StringBuilder sb = new StringBuilder();
+
+                    foreach (var str in BppCode)
+                    {
+                        sb.Append(str);
+                    }
+
+                    TextBox tb = new TextBox();
+                    tb.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                    tb.Text = sb.ToString();
+                    Vkladki.Items.Add(new TabItem
+                    {
+                        Content = tb
+                    });
+                    BppCode.Clear();
+                    BppCode.Add(GetBppHeader());
+                    BppCode.Add(GetBppVariables());
+                    BppCode.Add("\n[PROGRAM]\n");
+                    GetShiftOp();
+                    GetRoutOp(Xprev,Yprev);
+                }
             }
+           
 
         }
 

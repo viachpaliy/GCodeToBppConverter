@@ -33,7 +33,9 @@
                     </Button>
                 </ToolBar>
             </ToolBarTray>
-            <TextBox x:Name="BppText"  DockPanel.Dock="Right" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            <TabControl x:Name="Vkladki" DockPanel.Dock="Right">
+            <TextBox x:Name="GCode"   ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            </TabControl>
         </DockPanel>
     </Grid>
 </Window>
