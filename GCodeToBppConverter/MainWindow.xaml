@@ -34,7 +34,7 @@
                 </ToolBar>
             </ToolBarTray>
             <TabControl x:Name="Vkladki" DockPanel.Dock="Right">
-            <TextBox x:Name="GCode"   ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            
             </TabControl>
         </DockPanel>
     </Grid>

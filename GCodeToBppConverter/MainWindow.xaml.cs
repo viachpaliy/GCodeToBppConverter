@@ -63,7 +63,12 @@ namespace GCodeToBppConverter
                     MessageBox.Show("The file could not be read:\n" + e1.Message);
 
                 }
-                GCode.Text = gCode;
+                //GCode.Text = gCode;
+                BppCodeTabItem item = new BppCodeTabItem(gCode);
+                Vkladki.Items.Add(item);
+                //BppCodeTabItem item = (BppCodeTabItem)Vkladki.SelectedContent;
+                item.fileName = gcodeFile;
+                item.Header = System.IO.Path.GetFileName(gcodeFile);
                 PieceDialogCommand();
                 ToolButtonCommand();
                 ShiftButtonCommand();
@@ -109,15 +114,21 @@ namespace GCodeToBppConverter
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.DefaultExt = "bpp";
-            saveFileDialog.InitialDirectory = @"C:\WNC\home\d_xnc\p_p\prog\";
+            string initDir = @"C:\WNC\home\d_xnc\p_p\prog\";
+            if (Directory.Exists(initDir))
+            {
+                saveFileDialog.InitialDirectory = initDir;
+            }
             if (saveFileDialog.ShowDialog() == true)
             {
                 bppCodeFile = saveFileDialog.FileName;
             }
             using (StreamWriter outputFile = new StreamWriter(bppCodeFile))
             {
-                TextBox currentTB =(TextBox) Vkladki.SelectedContent;
-                outputFile.WriteLine(currentTB.Text);
+               BppCodeTabItem item = (BppCodeTabItem) Vkladki.SelectedItem;
+                outputFile.WriteLine(item.bppCode.Text);
+                item.fileName = saveFileDialog.FileName;
+                item.Header = System.IO.Path.GetFileName(item.fileName);
             }
         }
 
@@ -142,7 +153,11 @@ namespace GCodeToBppConverter
         private void NcButtonClick(object sender, RoutedEventArgs e)
         {
             BsXncSocketServer.Document doc = new BsXncSocketServer.Document();
-            doc.ProgramSelect(bppCodeFile, "");
+            BppCodeTabItem item = (BppCodeTabItem)Vkladki.SelectedItem;
+            if (item.fileName != "")
+            {
+                doc.ProgramSelect(item.fileName, "");
+            }
         }
 
         private void RunButtonClick(object sender, RoutedEventArgs e)
@@ -163,13 +178,15 @@ namespace GCodeToBppConverter
                 sb1.Append(str);
             }
 
-            TextBox tb1 = new TextBox();
-            tb1.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-            tb1.Text = sb1.ToString();
-            Vkladki.Items.Add(new TabItem
-            {
-                Content = tb1
-            });
+            Vkladki.Items.Add(new BppCodeTabItem(sb1.ToString()));
+
+            //TextBox tb1 = new TextBox();
+            //tb1.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+            //tb1.Text = sb1.ToString();
+            //Vkladki.Items.Add(new TabItem
+            //{
+             //   Content = tb1
+            //});
         }
 
         private void GetEndFile()
@@ -207,11 +224,13 @@ namespace GCodeToBppConverter
             BppCode.Add(code + '\n');
         }
 
-        private void GetRoutOp(double x, double y)
+        private void GetRoutOp(double x, double y, double z)
         {
             string code = String.Format(@"@ ROUT, """", """", 95893420, """", 0 : ""P1001"", 0, ""1"", 0, 0, """", 1, 1.6, -1, 0, 0, 32, 32, 50, 0, 45, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, ""{0}"", 100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 5, 0, 20, 80, 60, 0, """", """", ""ROUT"", 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 99, 0
   @ START_POINT, """", """", 95893036, """", 0 : {1}, {2}, 0", ToolName, Convert.ToString(x), Convert.ToString(y));
             BppCode.Add(code + '\n');
+            string codeLine = String.Format(@"  @ LINE_EP, """", """", 1, """", 0 : {0}, {1}, 0, {2}, 0, 0, 0, 0, 0", Convert.ToString(x), Convert.ToString(y), Convert.ToString(z));
+            BppCode.Add(codeLine + '\n');
         }
         private void GetBppCodeLines()
         {
@@ -300,19 +319,22 @@ namespace GCodeToBppConverter
                         sb.Append(str);
                     }
 
-                    TextBox tb = new TextBox();
-                    tb.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
-                    tb.Text = sb.ToString();
-                    Vkladki.Items.Add(new TabItem
-                    {
-                        Content = tb
-                    });
+                    // TextBox tb = new TextBox();
+                    // tb.VerticalScrollBarVisibility = ScrollBarVisibility.Auto;
+                    // tb.Text = sb.ToString();
+                    // Vkladki.Items.Add(new TabItem
+                    // {
+                    //     Content = tb
+                    // });
+                    Vkladki.Items.Add(new BppCodeTabItem(sb.ToString()));
                     BppCode.Clear();
                     BppCode.Add(GetBppHeader());
                     BppCode.Add(GetBppVariables());
                     BppCode.Add("\n[PROGRAM]\n");
                     GetShiftOp();
-                    GetRoutOp(Xprev,Yprev);
+                    GetRoutOp(Xprev,Yprev,Zprev);
+                    
+                    
                 }
             }
            

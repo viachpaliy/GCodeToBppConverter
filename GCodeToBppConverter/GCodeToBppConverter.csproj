@@ -55,6 +55,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BppCodeTabItem.cs" />
     <Compile Include="ShiftDialog.xaml.cs">
       <DependentUpon>ShiftDialog.xaml</DependentUpon>
     </Compile>
