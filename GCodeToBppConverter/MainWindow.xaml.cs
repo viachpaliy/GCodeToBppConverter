@@ -227,9 +227,9 @@ namespace GCodeToBppConverter
         private void GetRoutOp(double x, double y, double z)
         {
             string code = String.Format(@"@ ROUT, """", """", 95893420, """", 0 : ""P1001"", 0, ""1"", 0, 0, """", 1, 1.6, -1, 0, 0, 32, 32, 50, 0, 45, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, ""{0}"", 100, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 0, 0, 0, 0, 0, 0, 0, 0, 0, """", 5, 0, 20, 80, 60, 0, """", """", ""ROUT"", 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 99, 0
-  @ START_POINT, """", """", 95893036, """", 0 : {1}, {2}, 0", ToolName, Convert.ToString(x), Convert.ToString(y));
+  @ START_POINT, """", """", 95893036, """", 0 : {1}, {2}, 0", ToolName, Convert.ToString(x).Replace(',', '.'), Convert.ToString(y).Replace(',', '.'));
             BppCode.Add(code + '\n');
-            string codeLine = String.Format(@"  @ LINE_EP, """", """", 1, """", 0 : {0}, {1}, 0, {2}, 0, 0, 0, 0, 0", Convert.ToString(x), Convert.ToString(y), Convert.ToString(-z));
+            string codeLine = String.Format(@"  @ LINE_EP, """", """", 1, """", 0 : {0}, {1}, 0, {2}, 0, 0, 0, 0, 0", Convert.ToString(x).Replace(',', '.'), Convert.ToString(y).Replace(',', '.'), Convert.ToString(-z).Replace(',', '.'));
             BppCode.Add(codeLine + '\n');
         }
         private void GetBppCodeLines()
